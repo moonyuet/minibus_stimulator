@@ -157,7 +157,7 @@ Completed runs pay **70% of the fare** into the persistent wallet; failed runs s
 
 ## Notes
 
-- All seven routes are defined in the `ROUTES` object in `routes.js`: road sections, zone boundaries, checkpoints, gantries, traffic mix, scoring, tags and result copy. The Route Garage is generated from that object, so adding another route means adding one entry.
+- All seven routes are defined in the `ROUTES` object in `js/routes.js`: road sections, zone boundaries, checkpoints, gantries, traffic mix, scoring, tags and result copy. The Route Garage is generated from that object, so adding another route means adding one entry.
 - Best fares are stored per route in `localStorage` (`redvan-best-<route>`), with the original `redvan-best-v1` key still read for the Mong Kok route.
 - Wallet, parts, owned buses/maps and equipped choices are stored separately in `redvan-profile-v1`.
 - The game uses a pseudo-3D road renderer: precomputed curved road centres, perspective-projected road segments, procedural sprites and a fixed chase camera.
@@ -172,28 +172,52 @@ Completed runs pay **70% of the fare** into the persistent wallet; failed runs s
 
 MIT © 2026 [moonyuet](https://github.com/moonyuet). See [LICENSE](LICENSE).
 
-## Files
+## Project layout
 
-The game is split into small classic scripts. There is no bundler: `index.html` loads them in dependency order, and they share one global lexical scope.
+```
+minibus_stimulator/
+├── index.html
+├── styles/
+│   └── styles.css
+├── js/
+│   ├── constants.js
+│   ├── lib.js
+│   ├── abstract.js
+│   ├── assets.js
+│   ├── routes.js
+│   ├── audio.js
+│   ├── state.js
+│   ├── progression.js
+│   ├── world.js
+│   ├── gameplay.js
+│   ├── hud.js
+│   └── main.js
+├── serve.ps1
+├── serve.sh
+├── LICENSE
+└── README.md
+```
+
+The game is split into small classic scripts. There is no bundler: `index.html` loads them from `js/` in dependency order, and they share one global lexical scope.
 
 | File | Responsibility |
 | --- | --- |
 | `index.html` | Screens, HUD and game shell |
-| `styles.css` | Neon Hong Kong art direction and responsive layout |
-| `constants.js` | Tuning constants: road scale, speed limits, camera and draw distance |
-| `lib.js` | Pure helpers: clamping, interpolation, seeded noise, formatting and canvas paths |
-| `abstract.js` | Browser/canvas shell: DOM refs, viewport sizing, canvas surface and canvas factory |
-| `assets.js` | Procedural sprites, scenery art and title/backdrop generation |
-| `routes.js` | Route definitions, road geometry, scenery placement and speed-camera placement |
-| `audio.js` | Web Audio engine, diesel layers, siren, warnings and passenger voices |
-| `state.js` | Traffic type metadata, mutable run state and camera state |
-| `progression.js` | Shop catalogue, wallet/profile persistence, route garage and garage UI |
-| `world.js` | Road sampling, projection and the pseudo-3D renderer |
-| `gameplay.js` | Input, run flow, traffic, collisions, scoring, pedestrians, heat and police |
-| `hud.js` | HUD DOM updates and speedometer ticks |
-| `main.js` | Main loop, event bindings and boot sequence |
+| `styles/styles.css` | Neon Hong Kong art direction and responsive layout |
+| `js/constants.js` | Tuning constants: road scale, speed limits, camera and draw distance |
+| `js/lib.js` | Pure helpers: clamping, interpolation, seeded noise, formatting and canvas paths |
+| `js/abstract.js` | Browser/canvas shell: DOM refs, viewport sizing, canvas surface and canvas factory |
+| `js/assets.js` | Procedural sprites, scenery art and title/backdrop generation |
+| `js/routes.js` | Route definitions, road geometry, scenery placement and speed-camera placement |
+| `js/audio.js` | Web Audio engine, diesel layers, siren, warnings and passenger voices |
+| `js/state.js` | Traffic type metadata, mutable run state and camera state |
+| `js/progression.js` | Shop catalogue, wallet/profile persistence, route garage and garage UI |
+| `js/world.js` | Road sampling, projection and the pseudo-3D renderer |
+| `js/gameplay.js` | Input, run flow, traffic, collisions, scoring, pedestrians, heat and police |
+| `js/hud.js` | HUD DOM updates and speedometer ticks |
+| `js/main.js` | Main loop, event bindings and boot sequence |
 | `serve.ps1` | Windows PowerShell helper for the local HTTP server |
 | `serve.sh` | macOS/Linux shell helper for the local HTTP server |
 | `LICENSE` | MIT license |
 
-Load order matters because later files extend the same global lexical scope: `constants → lib → abstract → assets → routes → audio → state → progression → world → gameplay → hud → main`.
+Load order matters because later files extend the same global lexical scope: `js/constants → js/lib → js/abstract → js/assets → js/routes → js/audio → js/state → js/progression → js/world → js/gameplay → js/hud → js/main`.
