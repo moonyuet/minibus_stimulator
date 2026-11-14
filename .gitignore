@@ -1,0 +1,10 @@
+# local test / OS noise
+.edge-cdp/
+.DS_Store
+Thumbs.db
+*.log
+
+# temporary screenshots from local QA
+_smoke*.png
+_check*.png
+_final*.png

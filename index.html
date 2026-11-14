@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#07070d">
+<meta name="description" content="紅VAN飛車：香港紅色公共小巴深夜飛車遊戲。由旺角剷到屯門，擦身而過儲氮氣，夠鐘前埋站。">
+<title>紅VAN飛車 · 旺角 → 屯門</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2307080e'/%3E%3Crect x='9' y='22' width='46' height='25' rx='7' fill='%23ff2f4b'/%3E%3Crect x='14' y='12' width='36' height='13' rx='5' fill='%23ffe9c0'/%3E%3Crect x='17' y='27' width='30' height='11' rx='3' fill='%23141c24'/%3E%3Ccircle cx='20' cy='49' r='4' fill='%23090a0e'/%3E%3Ccircle cx='44' cy='49' r='4' fill='%23090a0e'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="world" aria-label="紅VAN飛車遊戲畫面"></canvas>
+
+  <div class="screen-fx" aria-hidden="true">
+    <div class="fx-vignette"></div>
+    <div class="fx-scanlines"></div>
+    <div class="fx-grain"></div>
+    <div id="boostFlash" class="fx-boost"></div>
+  </div>
+
+  <!-- ============================== HUD ============================== -->
+  <div id="hud" class="hud is-hidden">
+    <div class="hud-top">
+      <div class="brand-chip">
+        <span class="brand-mark">紅VAN</span>
+        <span id="brandRoute" class="brand-route">MK <i>→</i> TM</span>
+      </div>
+
+      <div class="timer-block">
+        <span class="eyebrow">收工時間</span>
+        <div id="timer" class="timer">01:30</div>
+        <div class="progress-wrap">
+          <div class="progress-track">
+            <div id="progressFill" class="progress-fill"></div>
+            <div id="vanMarker" class="van-marker"><span></span></div>
+            <div id="stopDot0" class="stop-dot" style="left:0%"><b id="stopLabel0">旺角</b></div>
+            <div id="stopDot1" class="stop-dot" style="left:33.33%"><b id="stopLabel1">荃灣</b></div>
+            <div id="stopDot2" class="stop-dot" style="left:66.66%"><b id="stopLabel2">屯門公路</b></div>
+            <div id="stopDot3" class="stop-dot" style="left:100%"><b id="stopLabel3">屯門</b></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="score-block">
+        <span class="eyebrow">今日車費</span>
+        <div id="score" class="score">$0</div>
+        <div id="bestLine" class="best-line">BEST $0</div>
+      </div>
+    </div>
+
+    <button id="pauseTouch" class="hud-icon-btn" type="button" aria-label="暫停遊戲">Ⅱ</button>
+
+    <div id="combo" class="combo is-hidden">
+      <span id="comboMult" class="combo-mult">×2</span>
+      <span class="combo-label">NEAR MISS<br><b>擦身而過</b></span>
+    </div>
+
+    <div id="policeAlert" class="police-alert is-hidden">
+      <span class="police-siren"></span> 警車追緊你 <b>甩開佢</b>
+      <span id="policeFine" class="police-fine"></span>
+    </div>
+
+    <div class="hud-bottom">
+      <div class="status-panel">
+        <div class="status-row">
+          <span class="status-label">車況</span>
+          <div class="bar damage-bar"><i id="damageFill"></i></div>
+          <span id="damageText" class="status-value">100%</span>
+        </div>
+        <div class="status-row">
+          <span class="status-label turbo-label">氮氣</span>
+          <div class="bar boost-bar"><i id="boostFill"></i></div>
+          <span id="boostText" class="status-value">35%</span>
+        </div>
+        <div class="status-row heat-row">
+          <span class="status-label heat-label">通緝</span>
+          <div class="bar heat-bar"><i id="heatFill"></i></div>
+          <span id="heatText" class="status-value">0%</span>
+        </div>
+        <div class="status-meta">
+          <span id="stageName">旺角 · MONG KOK</span>
+          <span id="nearMissLine">NEAR MISS 0</span>
+        </div>
+      </div>
+
+      <div id="toast" class="toast"></div>
+
+      <div class="speed-cluster">
+        <div class="speedo">
+          <svg viewBox="0 0 220 132" aria-hidden="true">
+            <defs>
+              <linearGradient id="speedGrad" x1="0" y1="1" x2="1" y2="0">
+                <stop offset="0" stop-color="#67f7ff"/>
+                <stop offset=".58" stop-color="#ffd166"/>
+                <stop offset="1" stop-color="#ff344f"/>
+              </linearGradient>
+            </defs>
+            <path class="speedo-arc" d="M 28 116 A 82 82 0 0 1 192 116" pathLength="100"/>
+            <path id="speedArc" class="speedo-arc-live" d="M 28 116 A 82 82 0 0 1 192 116" pathLength="100"/>
+            <g id="speedTicks"></g>
+            <circle id="needleDot" class="speedo-dot" cx="28" cy="116" r="5"></circle>
+          </svg>
+          <div class="speed-readout"><span id="speed">0</span><small>KM/H</small></div>
+        </div>
+        <div class="gear-line"><span id="gear">D</span><span class="gear-hint">自動波</span></div>
+      </div>
+    </div>
+
+    <div class="hud-hints">
+      <span><kbd>←</kbd><kbd>→</kbd> 扭軚</span>
+      <span><kbd>SPACE</kbd> 渦輪</span>
+      <span><kbd>H</kbd> 響咹</span>
+      <span><kbd>P</kbd> 暫停</span>
+    </div>
+  </div>
+
+  <!-- ============================== START ============================== -->
+  <section id="startScreen" class="overlay start-screen">
+    <div class="start-shade"></div>
+    <div class="start-inner">
+      <div class="hero">
+        <div class="kicker"><span class="live-dot"></span> 香港 · 深夜限定 · 紅VAN</div>
+        <h1 class="title" data-text="紅VAN飛車">
+          <span class="title-red">紅VAN</span><span class="title-outline">飛車</span>
+        </h1>
+        <p class="title-en">HONG KONG RED MINIBUS <b>DAREDEVIL RUN</b></p>
+
+        <div class="route-current">
+          <button id="routeCurrentBtn" class="route-current-btn" type="button" aria-haspopup="dialog" aria-controls="routeScreen" aria-expanded="false">
+            <span id="routeCurrentNo" class="route-current-no">01</span>
+            <span class="route-current-copy">
+              <small>現在路線 / SELECTED ROUTE</small>
+              <b id="routeCurrentName">旺角 → 屯門</b>
+              <em id="routeCurrentMeta">ORIGINAL · 33.9 KM · 3 STAGES</em>
+            </span>
+            <span class="route-current-open">全部路線 <i id="routeCount">7</i><b>›</b></span>
+          </button>
+        </div>
+
+        <div id="destBoard" class="dest-board" aria-label="路線：旺角至屯門">
+          <div class="dest-top"><span>紅色公共小巴</span><span id="destShift" class="dest-live">夜更 01</span></div>
+          <div class="dest-row">
+            <span class="dest-place"><span id="destOriginCn">旺角</span><small id="destOriginEn">MONG KOK</small></span>
+            <span class="dest-arrow">→</span>
+            <span class="dest-place dest-end"><span id="destDestCn">屯門</span><small id="destDestEn">TUEN MUN</small></span>
+          </div>
+          <div class="dest-bottom"><span id="destDistance">33.9 KM</span><span id="destStages">3 STAGES</span><span id="destTag">1 VERY BAD IDEA</span></div>
+        </div>
+
+        <div class="start-actions">
+          <button id="startBtn" class="btn btn-primary" type="button">
+            <span class="btn-small">撳掣上車</span>
+            <span class="btn-big">開車 <i>START ENGINE</i></span>
+          </button>
+          <button id="garageBtn" class="btn btn-ghost garage-btn" type="button">
+            <span>車房</span> <i>GARAGE</i>
+          </button>
+          <button id="soundBtn" class="btn btn-ghost" type="button" aria-pressed="true">
+            <span id="soundIcon">◉</span> 聲音 ON
+          </button>
+        </div>
+        <p class="disclaimer">業餘飛車，切勿模仿。真實紅VAN司機全部受過「唔可以遲到」專業訓練。</p>
+      </div>
+
+      <aside class="brief">
+        <div class="brief-head">
+          <span class="brief-tag">玩法 / HOW TO SURVIVE</span>
+          <span class="brief-best">BEST <b id="startBest">$0</b><span class="wallet-sep"> · 錢箱 <b id="walletChip">$0</b></span></span>
+        </div>
+        <div class="mission">
+          <span class="mission-num">01</span>
+          <p id="missionOne">由旺角剷到屯門。沿途有<strong>兩個檢查站</strong>，夠鐘之前埋站。</p>
+        </div>
+        <div class="mission">
+          <span class="mission-num">02</span>
+          <p>貼住其他車擦身而過，儲<strong>氮氣</strong>同<strong>連擊</strong>。越接近，越多錢。</p>
+        </div>
+        <div class="mission">
+          <span class="mission-num">03</span>
+          <p>撞車會扣<strong>車況</strong>同時間。車況見底，今晚提早收工。</p>
+        </div>
+
+        <div class="controls-grid">
+          <div class="control"><kbd>W</kbd><kbd>↑</kbd><span>畀油</span></div>
+          <div class="control"><kbd>S</kbd><kbd>↓</kbd><span>煞車</span></div>
+          <div class="control"><kbd>A</kbd><kbd>D</kbd><span>扭軚</span></div>
+          <div class="control"><kbd>←</kbd><kbd>→</kbd><span>扭軚</span></div>
+          <div class="control wide"><kbd>SPACE</kbd><span>渦輪增壓</span></div>
+          <div class="control wide"><kbd>H</kbd><kbd>P</kbd><kbd>M</kbd><span>響咹 · 暫停 · 靜音</span></div>
+        </div>
+
+        <div id="routeStrip" class="route-strip">
+          <span>MK</span><i></i><span>TSW</span><i></i><span>TMR</span><i></i><span>TM</span>
+        </div>
+        <p id="briefFoot" class="brief-foot">「屯門公路，今晚唔塞車。」—— 一個明顯嘅謊言</p>
+      </aside>
+    </div>
+    <div class="start-footer">
+      <span>RED VAN DAREDEVIL · 2026</span>
+      <span>MADE FOR THE 3AM COMMUTE</span>
+    </div>
+  </section>
+
+  <!-- ============================== ROUTE GARAGE ============================== -->
+  <section id="routeScreen" class="overlay route-screen is-hidden" role="dialog" aria-modal="true" aria-labelledby="routeScreenTitle">
+    <div class="route-modal">
+      <div class="route-modal-head">
+        <div>
+          <span class="eyebrow">ROUTE GARAGE · 夜更路線</span>
+          <h2 id="routeScreenTitle">揀路線</h2>
+        </div>
+        <button id="closeRoutesBtn" class="route-close" type="button" aria-label="關閉路線選單">×</button>
+      </div>
+      <div id="routeGrid" class="route-grid"></div>
+      <p class="route-modal-foot">7 條路線 · 每條路線都有獨立最佳車費、排名同檢查站</p>
+    </div>
+  </section>
+
+  <!-- ============================== GARAGE ============================== -->
+  <section id="garageScreen" class="overlay garage-screen is-hidden" role="dialog" aria-modal="true" aria-labelledby="garageTitle">
+    <div class="garage-modal">
+      <header class="garage-head">
+        <div>
+          <span class="eyebrow">紅VAN車房 · WORKSHOP</span>
+          <h2 id="garageTitle">整車</h2>
+        </div>
+        <div class="garage-head-right">
+          <div class="garage-wallet"><span>錢箱</span><b id="garageWallet">$0</b></div>
+          <button id="closeGarageBtn" class="route-close" type="button" aria-label="關閉車房">×</button>
+        </div>
+      </header>
+      <div class="garage-tabs" role="tablist" aria-label="車房分類">
+        <button class="garage-tab is-active" data-garage-tab="parts" type="button" role="tab" aria-selected="true">升級 <i>PARTS</i></button>
+        <button class="garage-tab" data-garage-tab="buses" type="button" role="tab" aria-selected="false">巴士 <i>BUSES</i></button>
+        <button class="garage-tab" data-garage-tab="maps" type="button" role="tab" aria-selected="false">地圖 <i>MAPS</i></button>
+      </div>
+      <div id="garageContent" class="garage-content"></div>
+      <p id="garageNotice" class="garage-notice">買升級、換車、揀地圖。車房只收現金，唔收投訴。</p>
+    </div>
+  </section>
+
+  <!-- ============================== CHECKPOINT ============================== -->
+  <section id="checkpointScreen" class="overlay checkpoint-screen is-hidden">
+    <div class="checkpoint-card">
+      <div class="cp-kicker">CHECKPOINT CLEARED</div>
+      <div id="cpChinese" class="cp-chinese">荃灣</div>
+      <div id="cpEnglish" class="cp-english">TSUEN WAN</div>
+      <div class="cp-rule"></div>
+      <div class="cp-stats">
+        <div><span>時間獎勵</span><b id="cpTime">+15:00</b></div>
+        <div><span>車況維修</span><b id="cpRepair">+25%</b></div>
+        <div><span>目前車費</span><b id="cpScore">$0</b></div>
+      </div>
+      <div id="cpLine" class="cp-line">「未落車嘅，坐穩少少。」</div>
+      <div class="cp-meter"><i></i></div>
+    </div>
+  </section>
+
+  <!-- ============================== PAUSE ============================== -->
+  <section id="pauseScreen" class="overlay pause-screen is-hidden">
+    <div class="pause-card">
+      <div class="pause-kicker">引擎怠速中</div>
+      <h2>暫停</h2>
+      <p>唔好偷睇後面。後面冇嘢。</p>
+      <div class="pause-actions">
+        <button id="resumeBtn" class="btn btn-primary" type="button"><span class="btn-big">繼續 <i>RESUME</i></span></button>
+        <button id="quitBtn" class="btn btn-ghost" type="button">返回車房</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== RESULT ============================== -->
+  <section id="resultScreen" class="overlay result-screen is-hidden">
+    <div class="result-card">
+      <div class="result-head">
+        <div>
+          <div id="resultKicker" class="result-kicker">ROUTE COMPLETE</div>
+          <h2 id="resultTitle">埋站。</h2>
+        </div>
+        <div id="rank" class="rank">S</div>
+      </div>
+      <p id="resultLine" class="result-line">你成功由旺角去到屯門，而且冇人報警。</p>
+
+      <div class="result-grid">
+        <div class="result-stat"><span>車費</span><b id="resultScore">$0</b></div>
+        <div class="result-stat"><span>擦身而過</span><b id="resultNear">0</b></div>
+        <div class="result-stat"><span>最高時速</span><b id="resultSpeed">0</b></div>
+        <div class="result-stat"><span>剩餘時間</span><b id="resultTime">0:00</b></div>
+      </div>
+
+      <div id="newBest" class="new-best is-hidden">★ 新紀錄 NEW BEST ★</div>
+      <div id="resultEarned" class="result-earned">車費入賬 +$0</div>
+
+      <div class="result-actions">
+        <button id="restartBtn" class="btn btn-primary" type="button">
+          <span class="btn-small">再嚟過</span>
+          <span class="btn-big">跑多轉 <i>RUN IT BACK</i></span>
+        </button>
+        <button id="menuBtn" class="btn btn-ghost" type="button">返回車房</button>
+      </div>
+      <p id="resultFoot" class="result-foot">HK RED VAN DAREDEVIL · 旺角 → 屯門</p>
+    </div>
+  </section>
+
+  <!-- ============================== TOUCH ============================== -->
+  <div id="touchControls" class="touch-controls" aria-hidden="true">
+    <div class="touch-steer">
+      <button id="touchLeft" class="touch-btn" type="button" aria-label="向左">◀</button>
+      <button id="touchRight" class="touch-btn" type="button" aria-label="向右">▶</button>
+    </div>
+    <div class="touch-pedals">
+      <button id="touchBrake" class="touch-btn touch-brake" type="button" aria-label="煞車">BRAKE</button>
+      <button id="touchBoost" class="touch-btn touch-boost" type="button" aria-label="渦輪">N<small>2</small>O</button>
+      <button id="touchGas" class="touch-btn touch-gas" type="button" aria-label="加速">GAS</button>
+    </div>
+  </div>
+
+  <div id="rotateHint" class="rotate-hint">
+    <span>↻</span>
+    <b>打橫部電話</b>
+    <small>ROTATE FOR THE FULL DAREDEVIL EXPERIENCE</small>
+  </div>
+</div>
+
+<!-- Classic scripts share one global lexical scope. Load order matters. -->
+<script src="constants.js"></script>
+<script src="lib.js"></script>
+<script src="abstract.js"></script>
+<script src="assets.js"></script>
+<script src="routes.js"></script>
+<script src="audio.js"></script>
+<script src="state.js"></script>
+<script src="progression.js"></script>
+<script src="world.js"></script>
+<script src="gameplay.js"></script>
+<script src="hud.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
