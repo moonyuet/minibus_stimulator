@@ -1,0 +1,112 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version, e.g. v0.1.0"
+        required: true
+        default: "v0.1.0"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Package and publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            TAG="${GITHUB_REF_NAME}"
+          else
+            TAG="${{ inputs.version }}"
+            if [[ "$TAG" != v* ]]; then
+              TAG="v${TAG}"
+            fi
+          fi
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Version must look like v0.1.0 (got: $TAG)" >&2
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Validate source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f index.html
+          test -f styles/styles.css
+          test -f js/main.js
+          test -f LICENSE
+          for file in js/*.js; do
+            node --check "$file"
+          done
+
+      - name: Build release archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${{ steps.version.outputs.tag }}"
+          mkdir -p "dist/minibus_stimulator"
+          cp -R index.html styles js serve.ps1 serve.sh LICENSE README.md "dist/minibus_stimulator/"
+          cd dist
+          zip -r "minibus_stimulator-${TAG}.zip" minibus_stimulator
+          sha256sum "minibus_stimulator-${TAG}.zip" > "minibus_stimulator-${TAG}.zip.sha256"
+          ls -lh
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: minibus-stimulator-${{ steps.version.outputs.tag }}
+          path: |
+            dist/*.zip
+            dist/*.sha256
+          if-no-files-found: error
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: "Red Van Daredevil ${{ steps.version.outputs.tag }}"
+          body: |
+            ## 紅VAN飛車 · Red Van Daredevil — first public release
+
+            Seven Hong Kong red-minibus routes, passenger voices, traffic lights,
+            pedestrians, cyclists, speed cameras, police chases, garage upgrades,
+            special buses and map conditions.
+
+            ### Run it
+
+            1. Download and unzip `minibus_stimulator-${{ steps.version.outputs.tag }}.zip`.
+            2. Open the folder.
+            3. Start a local server:
+               - Windows PowerShell: `.\serve.ps1`
+               - macOS/Linux: `chmod +x serve.sh && ./serve.sh`
+            4. Open <http://localhost:8080>.
+
+            No npm install, build step or external assets are required.
+
+            ### License
+
+            MIT © 2026 moonyuet
+          files: |
+            dist/*.zip
+            dist/*.sha256
+          fail_on_unmatched_files: true
+          generate_release_notes: true
+          make_latest: true

@@ -1,5 +1,8 @@
 # 紅VAN飛車 · Red Van Daredevil
 
+[![Release](https://img.shields.io/github/v/release/moonyuet/minibus_stimulator)](https://github.com/moonyuet/minibus_stimulator/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A playable, dependency-free browser game about the least sensible ways to cross Hong Kong by red public light bus, at night, with a countdown running. Seven routes are available, from the original **Mong Kok → Tsuen Mun** run to the twisty **Shau Kei Wan → Shek O** beach route. Fares pay for garage upgrades, special buses and map conditions; passengers scream, complain and get off at checkpoints; pedestrians and cyclists share the road, zebra crossings are controlled by traffic lights; speed cameras and a full wanted meter eventually bring the police down on you.
 
 No frameworks, no build step, no external images or audio. The road, Hong Kong skyline, minibus, traffic, neon signs, engine sound and tyre noise are all generated in the browser with Canvas and the Web Audio API.
@@ -10,14 +13,14 @@ No build step, no npm install and no package manager are required. You only need
 
 ### Quick start
 
-1. Download or clone the repository:
+1. Download the latest packaged release from the [Releases page](https://github.com/moonyuet/minibus_stimulator/releases), or clone the repository:
 
    ```powershell
    git clone https://github.com/moonyuet/minibus_stimulator.git
    cd minibus_stimulator
    ```
 
-   Or download the ZIP from GitHub and extract it.
+   The release ZIP is named `minibus_stimulator-vX.Y.Z.zip` and already contains the game files and server helpers.
 
 2. Start the local server with one of the options below.
 
@@ -172,10 +175,19 @@ Completed runs pay **70% of the fare** into the persistent wallet; failed runs s
 
 MIT © 2026 [moonyuet](https://github.com/moonyuet). See [LICENSE](LICENSE).
 
+## Releases
+
+Releases are published automatically by [`.github/workflows/release.yml`](.github/workflows/release.yml) when a `v*` tag is pushed. The action validates every JavaScript file, builds a ZIP release archive and its SHA-256 checksum, uploads a workflow artifact and creates the GitHub Release.
+
+See the [Releases page](https://github.com/moonyuet/minibus_stimulator/releases) for the latest download.
+
 ## Project layout
 
 ```
 minibus_stimulator/
+├── .github/
+│   └── workflows/
+│       └── release.yml
 ├── index.html
 ├── styles/
 │   └── styles.css
@@ -218,6 +230,7 @@ The game is split into small classic scripts. There is no bundler: `index.html` 
 | `js/main.js` | Main loop, event bindings and boot sequence |
 | `serve.ps1` | Windows PowerShell helper for the local HTTP server |
 | `serve.sh` | macOS/Linux shell helper for the local HTTP server |
+| `.github/workflows/release.yml` | Tag-driven release build and GitHub Release |
 | `LICENSE` | MIT license |
 
 Load order matters because later files extend the same global lexical scope: `js/constants → js/lib → js/abstract → js/assets → js/routes → js/audio → js/state → js/progression → js/world → js/gameplay → js/hud → js/main`.
