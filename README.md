@@ -4,18 +4,88 @@ A playable, dependency-free browser game about the least sensible ways to cross 
 
 No frameworks, no build step, no external images or audio. The road, Hong Kong skyline, minibus, traffic, neon signs, engine sound and tyre noise are all generated in the browser with Canvas and the Web Audio API.
 
-## Play
+## Play / run locally
 
-Open `index.html` in a modern browser (Chrome, Edge, Safari or Firefox).
+No build step, no npm install and no package manager are required. You only need a modern browser (Chrome, Edge, Safari or Firefox). Python 3 is optional and is used only to serve the files over a local HTTP server.
 
-For the cleanest local experience:
+### Quick start
+
+1. Download or clone the repository:
+
+   ```powershell
+   git clone https://github.com/moonyuet/minibus_stimulator.git
+   cd minibus_stimulator
+   ```
+
+   Or download the ZIP from GitHub and extract it.
+
+2. Start the local server with one of the options below.
+
+3. Open <http://localhost:8080> in your browser.
+
+4. Stop the server with `Ctrl+C`.
+
+### Windows PowerShell
 
 ```powershell
-cd C:\Users\Kayla\Documents\minibus_stimulator
+cd path\to\minibus_stimulator
+py -m http.server 8080
+```
+
+If `py` is not available, use:
+
+```powershell
 python -m http.server 8080
 ```
 
-Then go to <http://localhost:8080>.
+You can also use the included helper, which finds `py` or `python` for you:
+
+```powershell
+.\serve.ps1
+# different port:
+.\serve.ps1 -Port 8081
+```
+
+If PowerShell blocks local scripts, run:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\serve.ps1
+```
+
+### macOS / Linux shell
+
+```bash
+cd path/to/minibus_stimulator
+python3 -m http.server 8080
+```
+
+Or use the included helper:
+
+```bash
+chmod +x serve.sh
+./serve.sh
+# different port:
+./serve.sh 8081
+```
+
+Some systems expose Python as `python` rather than `python3`; both are handled by `serve.sh`.
+
+### If Python is missing
+
+- **Windows PowerShell:** `winget install -e --id Python.Python.3.12`, then reopen PowerShell.
+- **macOS:** `brew install python`, or download Python from <https://www.python.org/downloads/>.
+- **Ubuntu / Debian:** `sudo apt update && sudo apt install python3`
+- **Fedora:** `sudo dnf install python3`
+
+There is nothing else to install: no `pip install`, no `npm install` and no bundler.
+
+### Troubleshooting
+
+- **`python` opens the Microsoft Store:** use `py -m http.server 8080` instead.
+- **Port 8080 is already in use:** use 8081 (`py -m http.server 8081` or `./serve.sh 8081`).
+- **Opening `index.html` directly:** this generally works, but a local server is recommended so browser file-access rules do not interfere with storage or audio.
+
+### Start the game
 
 Click the current-route card to open the **Route Garage** (or press `1`–`7` on the start screen), pick a route, then click **開車 / START ENGINE** once to enable audio. The **車房 GARAGE** button opens upgrades, buses and map conditions.
 
@@ -122,6 +192,8 @@ The game is split into small classic scripts. There is no bundler: `index.html` 
 | `gameplay.js` | Input, run flow, traffic, collisions, scoring, pedestrians, heat and police |
 | `hud.js` | HUD DOM updates and speedometer ticks |
 | `main.js` | Main loop, event bindings and boot sequence |
+| `serve.ps1` | Windows PowerShell helper for the local HTTP server |
+| `serve.sh` | macOS/Linux shell helper for the local HTTP server |
 | `LICENSE` | MIT license |
 
 Load order matters because later files extend the same global lexical scope: `constants → lib → abstract → assets → routes → audio → state → progression → world → gameplay → hud → main`.
