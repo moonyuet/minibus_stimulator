@@ -51,8 +51,13 @@ jobs:
           test -f index.html
           test -f styles/styles.css
           test -f js/main.js
+          test -f mobile/manifest.webmanifest
+          test -f mobile/sw.js
+          test -f mobile/icons/icon-192.png
+          test -f mobile/icons/icon-512.png
+          test -f sw.js
           test -f LICENSE
-          for file in js/*.js; do
+          for file in js/*.js mobile/sw.js sw.js; do
             node --check "$file"
           done
 
@@ -62,7 +67,7 @@ jobs:
           set -euo pipefail
           TAG="${{ steps.version.outputs.tag }}"
           mkdir -p "dist/minibus_stimulator"
-          cp -R index.html styles js serve.ps1 serve.sh LICENSE README.md "dist/minibus_stimulator/"
+          cp -R index.html styles js mobile sw.js serve.ps1 serve.sh LICENSE README.md "dist/minibus_stimulator/"
           cd dist
           zip -r "minibus_stimulator-${TAG}.zip" minibus_stimulator
           sha256sum "minibus_stimulator-${TAG}.zip" > "minibus_stimulator-${TAG}.zip.sha256"
@@ -89,6 +94,10 @@ jobs:
             Seven Hong Kong red-minibus routes, passenger voices, traffic lights,
             pedestrians, cyclists, speed cameras, police chases, garage upgrades,
             special buses and map conditions.
+
+            **Mobile:** the build is installable as a PWA on Android and iPhone. Host the
+            release over HTTPS, then use Chrome's “Install app” or Safari's
+            “Add to Home Screen”. See `mobile/README.md` for deployment details.
 
             ### Run it
 

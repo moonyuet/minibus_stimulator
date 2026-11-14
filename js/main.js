@@ -106,7 +106,8 @@
     bindTouch();
     loadProfile();
     loadBest();
-    if (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) {
+    const coarsePointer = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+    if (coarsePointer || (navigator.maxTouchPoints || 0) > 0) {
       document.body.classList.add("touch");
     }
     updateSoundButton(false);
@@ -115,3 +116,12 @@
   }
 
   boot();
+
+  if ("serviceWorker" in navigator &&
+      (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(() => {
+        /* PWA caching is optional; the game still runs without it. */
+      });
+    });
+  }

@@ -92,6 +92,15 @@ There is nothing else to install: no `pip install`, no `npm install` and no bund
 
 Click the current-route card to open the **Route Garage** (or press `1`–`7` on the start screen), pick a route, then click **開車 / START ENGINE** once to enable audio. The **車房 GARAGE** button opens upgrades, buses and map conditions.
 
+### Mobile / PWA
+
+The same build is installable as a fullscreen PWA on Android and iPhone:
+
+- **Android:** open the HTTPS URL in Chrome → menu → **Install app / Add to Home screen**
+- **iPhone/iPad:** open the HTTPS URL in Safari → **Share → Add to Home Screen**
+
+Host it over HTTPS (GitHub Pages, Netlify, Cloudflare Pages or any static host). The game includes touch controls, safe-area padding for notches, landscape layout and offline caching. Full deployment details are in [`mobile/README.md`](mobile/README.md).
+
 ## Routes
 
 | # | Route | Distance | Difficulty | Character |
@@ -204,6 +213,12 @@ minibus_stimulator/
 │   ├── gameplay.js
 │   ├── hud.js
 │   └── main.js
+├── mobile/
+│   ├── README.md
+│   ├── manifest.webmanifest
+│   ├── sw.js
+│   └── icons/
+├── sw.js
 ├── serve.ps1
 ├── serve.sh
 ├── LICENSE
@@ -228,6 +243,10 @@ The game is split into small classic scripts. There is no bundler: `index.html` 
 | `js/gameplay.js` | Input, run flow, traffic, collisions, scoring, pedestrians, heat and police |
 | `js/hud.js` | HUD DOM updates and speedometer ticks |
 | `js/main.js` | Main loop, event bindings and boot sequence |
+| `mobile/manifest.webmanifest` | PWA install metadata and icons |
+| `mobile/sw.js` | Offline cache logic used by the root service worker |
+| `mobile/README.md` | Android/iPhone PWA deployment guide |
+| `sw.js` | Root-scoped service-worker shim |
 | `serve.ps1` | Windows PowerShell helper for the local HTTP server |
 | `serve.sh` | macOS/Linux shell helper for the local HTTP server |
 | `.github/workflows/release.yml` | Tag-driven release build and GitHub Release |
